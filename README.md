@@ -8,7 +8,7 @@ go get github.com/pidgy/obs
 ```
 
 ##### Install
-This library is developed against libobs-windows64-release-27.5.32. Prebuilt DLL files can be downloaded [here](https://obsstudios3.streamlabs.com/libobs-windows64-release-27.5.32.7z).
+This library is developed against `libobs-windows64-release-27.5.32`. Specifically the [pre-built](https://obsstudios3.streamlabs.com/libobs-windows64-release-27.5.32.7z) version.
 
 ##### Testing
 [obs_test.go](https://github.com/pidgy/obs/blob/main/obs_test.go) validates all of the functionality implemented in this library.
