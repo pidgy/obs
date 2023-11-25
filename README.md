@@ -17,7 +17,7 @@ This library is developed against libobs-windows64-release-27.5.32. Prebuilt DLL
 ```go
 err := core.Startup(locale.EnUS, "", profiler.NULL)
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 defer core.Shutdown()
 ```
@@ -26,27 +26,25 @@ defer core.Shutdown()
 ```go
 m, err := audio.MonitoringDevice()
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 
 if m.Name != "" || m.ID != "" {
-    t.Fatalf("expected unset monitoring device")
+    panic("expected unset monitoring device")
 }
 
 d, err := audio.EnumMonitoringDevices()
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 
 for _, m := range d {
-    t.Logf("setting %s", m)
-
     ok, err := m.Set()
     if err != nil {
-        t.Fatal(err)
+        panic(err)
     }
     if !ok {
-        t.Fatalf("failed to set %s", m)
+        panic("failed to set audio monitoring device")
     }
 }
 ```
@@ -55,27 +53,27 @@ for _, m := range d {
 ```go
 video, err := data.New()
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 
 err = video.SetString("capture_mode", "window")
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 
 err = video.SetString("window", "foo:bar:foobar.exe")
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 
 // obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero)
 s, err := source.New("game_capture", "gameplay", video, 0)
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 
 err = s.Release()
 if err != nil {
-    t.Fatal(err)
+    panic(err)
 }
 ```
