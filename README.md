@@ -1,6 +1,6 @@
 ### obs 
 
-###### `obs` is a [libobs](https://docs.obsproject.com/) wrapper written in Go. 
+###### [libobs](https://docs.obsproject.com/) wrapper written in Go. 
 
 ##### Install
 ```
