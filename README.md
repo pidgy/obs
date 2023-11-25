@@ -66,7 +66,6 @@ if err != nil {
     panic(err)
 }
 
-// obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero)
 s, err := source.New("game_capture", "gameplay", video, 0)
 if err != nil {
     panic(err)
