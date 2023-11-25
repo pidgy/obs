@@ -11,10 +11,10 @@ go get github.com/pidgy/obs
 This library is developed against libobs-windows64-release-27.5.32. Prebuilt DLL files can be downloaded [here](https://obsstudios3.streamlabs.com/libobs-windows64-release-27.5.32.7z).
 
 ##### Testing
-`obs_test.go` tests all of the functionality implemented in this library.
+[obs_test.go](https://github.com/pidgy/obs/blob/main/obs_test.go) validates all of the functionality implemented in this library.
 
 ##### Startup / Shutdown
-```
+```go
 err := core.Startup(locale.EnUS, "", profiler.NULL)
 if err != nil {
     t.Fatal(err)
@@ -23,7 +23,7 @@ defer core.Shutdown()
 ```
 
 ##### Audio Monitoring Devices
-```
+```go
 m, err := audio.MonitoringDevice()
 if err != nil {
     t.Fatal(err)
@@ -52,7 +52,7 @@ for _, m := range d {
 ```
 
 ##### Video Capture Source
-```
+```go
 video, err := data.New()
 if err != nil {
     t.Fatal(err)
