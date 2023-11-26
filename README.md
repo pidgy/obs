@@ -7,7 +7,7 @@
 go get github.com/pidgy/obs
 ```
 
-##### Install
+##### Dependencies
 This library is developed against [libobs-windows64-release-27.5.32](https://obsstudios3.streamlabs.com/libobs-windows64-release-27.5.32.7z).
 
 ##### Testing
