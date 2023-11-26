@@ -5,9 +5,12 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/pidgy/obs/graphics"
-	"github.com/pidgy/obs/lib"
+	"github.com/pkg/errors"
+
+	"github.com/pidgy/obs/dll"
 )
+
+const Null = Type(0)
 
 type (
 	// Colorspace wraps video_colorspace.
@@ -35,25 +38,26 @@ type (
 	}
 
 	// Type wraps obs_video_info.
-	Type struct {
-		FPSNumerator   uint32
-		FPSDenominator uint32
-		BaseWidth      uint32
-		BaseHeight     uint32
-		OutputWidth    uint32
-		OutputHeight   uint32
+	Type uintptr
+	// Type struct {
+	// 	FPSNumerator   uint32
+	// 	FPSDenominator uint32
+	// 	BaseWidth      uint32
+	// 	BaseHeight     uint32
+	// 	OutputWidth    uint32
+	// 	OutputHeight   uint32
 
-		Format Format
+	// 	Format Format
 
-		Adapter uint32
+	// 	Adapter uint32
 
-		GPUConversion bool
+	// 	GPUConversion bool
 
-		Colorspace Colorspace
-		Range      Range
+	// 	Colorspace Colorspace
+	// 	Range      Range
 
-		Scale graphics.Scale
-	}
+	// 	Scale graphics.Scale
+	// }
 )
 
 // NewRawCallback returns a RawCallback used for obs_add/remove_raw_video_callback.
@@ -69,13 +73,13 @@ func NewRawCallback(callback func(*Data)) *RawCallback {
 }
 
 // Get wraps obs_get_video.
-func Get() (*Type, error) {
-	r, _, err := lib.OBS.NewProc("obs_get_video").Call()
+func Get() (Type, error) {
+	r, _, err := dll.OBS.NewProc("obs_get_video").Call()
 	if err != syscall.Errno(0) {
-		return nil, err
+		return Null, errors.Wrap(err, "obs_get_video")
 	}
 
-	return (*Type)(unsafe.Pointer(&r)), nil
+	return Type(r), nil
 }
 
 // Add wraps void obs_add_raw_video_callback(
@@ -86,13 +90,13 @@ func Get() (*Type, error) {
 //
 // ).
 func (r *RawCallback) Add(s *ScaleInfo) error {
-	_, _, err := lib.OBS.NewProc("obs_add_raw_video_callback").Call(
+	_, _, err := dll.OBS.NewProc("obs_add_raw_video_callback").Call(
 		uintptr(unsafe.Pointer(s)),
 		r.handle,
 		uintptr(0),
 	)
 	if err != syscall.Errno(0) {
-		return err
+		return errors.Wrap(err, "obs_add_raw_video_callback")
 	}
 	return nil
 }
@@ -104,11 +108,11 @@ func (r *RawCallback) Add(s *ScaleInfo) error {
 //
 // ).
 func (r *RawCallback) Remove() error {
-	_, _, err := lib.OBS.NewProc("obs_remove_raw_video_callback").Call(
+	_, _, err := dll.OBS.NewProc("obs_remove_raw_video_callback").Call(
 		r.handle,
 	)
 	if err != syscall.Errno(0) {
-		return err
+		return errors.Wrap(err, "obs_remove_raw_video_callback")
 	}
 	return nil
 }
@@ -116,11 +120,11 @@ func (r *RawCallback) Remove() error {
 // Reset wraps int obs_reset_video(struct obs_video_info *ovi).
 // libobs example: https://gist.github.com/fzwoch/9e925aab37238006efb1e001241509a8
 func Reset(i *Type) error {
-	r, _, err := lib.OBS.NewProc("obs_reset_video").Call(
+	r, _, err := dll.OBS.NewProc("obs_reset_video").Call(
 		uintptr(unsafe.Pointer(i)),
 	)
 	if err != syscall.Errno(0) {
-		return err
+		return errors.Wrap(err, "obs_reset_video")
 	}
 
 	result := Result(r)
@@ -129,4 +133,9 @@ func Reset(i *Type) error {
 	}
 
 	return nil
+}
+
+// IsNull returns true or false as to whether or not Type has been initialized.
+func (t Type) IsNull() bool {
+	return t == Null
 }

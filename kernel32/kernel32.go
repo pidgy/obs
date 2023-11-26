@@ -1,10 +1,10 @@
 package kernel32
 
 import (
-	"fmt"
 	"syscall"
 	"unsafe"
 
+	"github.com/pkg/errors"
 	"golang.org/x/sys/windows"
 )
 
@@ -26,10 +26,10 @@ func AddDllDirectory(path string) (Cookie, error) {
 
 	r, _, err := syscall.Syscall(add.Addr(), 1, uintptr(unsafe.Pointer(p)), 0, 0)
 	if err != syscall.Errno(0) {
-		return 0, err
+		return 0, errors.Wrap(err, "AddDllDirectory")
 	}
 	if r == 0 {
-		return 0, fmt.Errorf("failed to add dll directory: %s", path)
+		return 0, windows.GetLastError()
 	}
 
 	return Cookie(r), nil
@@ -46,10 +46,38 @@ func (c Cookie) RemoveDllDirectory() error {
 
 	r, _, err := syscall.Syscall(remove.Addr(), 1, uintptr(c), 0, 0)
 	if err != syscall.Errno(0) {
-		return err
+		return errors.Wrap(err, "RemoveDllDirectory")
 	}
 	if r == 0 {
-		return fmt.Errorf("failed to remove dll directory: %d", c)
+		return windows.GetLastError()
+	}
+
+	return nil
+}
+
+func (c Cookie) LoadLibrary(dll string) error {
+	r, err := windows.LoadLibrary(dll)
+	if err != nil {
+		return errors.Wrap(err, "LoadLibrary")
+	}
+	if r == 0 {
+		return windows.GetLastError()
+	}
+
+	return nil
+}
+
+func (c Cookie) LoadLibraryEx(dll string) error {
+	r, err := windows.LoadLibraryEx(
+		dll,
+		windows.Handle(0),
+		windows.LOAD_WITH_ALTERED_SEARCH_PATH,
+	)
+	if err != nil {
+		return errors.Wrap(err, "LoadLibraryEx")
+	}
+	if r == 0 {
+		return windows.GetLastError()
 	}
 
 	return nil
