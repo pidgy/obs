@@ -14,10 +14,10 @@ const Null = Type(0)
 
 type (
 	// Colorspace wraps video_colorspace.
-	Colorspace int32
+	Colorspace uint32
 
 	// Range wraps video_range_type.
-	Range int32
+	Range uint32
 
 	// Data wraps video_data.
 	Data uintptr
@@ -39,25 +39,6 @@ type (
 
 	// Type wraps obs_video_info.
 	Type uintptr
-	// Type struct {
-	// 	FPSNumerator   uint32
-	// 	FPSDenominator uint32
-	// 	BaseWidth      uint32
-	// 	BaseHeight     uint32
-	// 	OutputWidth    uint32
-	// 	OutputHeight   uint32
-
-	// 	Format Format
-
-	// 	Adapter uint32
-
-	// 	GPUConversion bool
-
-	// 	Colorspace Colorspace
-	// 	Range      Range
-
-	// 	Scale graphics.Scale
-	// }
 )
 
 // NewRawCallback returns a RawCallback used for obs_add/remove_raw_video_callback.
@@ -119,7 +100,7 @@ func (r *RawCallback) Remove() error {
 
 // Reset wraps int obs_reset_video(struct obs_video_info *ovi).
 // libobs example: https://gist.github.com/fzwoch/9e925aab37238006efb1e001241509a8
-func Reset(i *Type) error {
+func Reset(i *Info) error {
 	r, _, err := dll.OBS.NewProc("obs_reset_video").Call(
 		uintptr(unsafe.Pointer(i)),
 	)

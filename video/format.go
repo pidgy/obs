@@ -1,7 +1,7 @@
 package video
 
 // Format wraps video_format.
-type Format int32
+type Format uint32
 
 const (
 	FormatNone Format = iota

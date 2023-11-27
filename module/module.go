@@ -1,5 +1,10 @@
 package module
 
+// #cgo windows CFLAGS: -I ../libobs/include -I libobs/include -I libobs
+//
+// #include "obs-module.h"
+import "C"
+
 import (
 	"fmt"
 	"path/filepath"
@@ -52,8 +57,7 @@ func New(name string) (Type, error) {
 	if err != nil {
 		return Null, err
 	}
-
-	dir = filepath.Join(dir, "../", "../", "data")
+	dir = filepath.Join(dir, "../", "../", "data", "obs-plugins", name)
 
 	_, _, err = dll.OBS.NewProc("obs_open_module").Call(
 		uintptr(unsafe.Pointer(&m)),
@@ -117,7 +121,29 @@ func (r Return) String() string {
 	}
 }
 
+// Description wraps const char *obs_get_module_description(obs_module_t *module).
+func (t Type) Description() (string, error) {
+	r, _, err := dll.OBS.NewProc("obs_get_module_description").Call(
+		uintptr(unsafe.Pointer(t)),
+	)
+	if err != syscall.Errno(0) {
+		return "", errors.Wrap(err, "obs_get_module_description")
+	}
+	return uptr.String(r), nil
+}
+
 // IsNull returns true or false as to whether or not Type has been initialized.
 func (t Type) IsNull() bool {
 	return t == Null
+}
+
+// Name wraps const char *obs_get_module_name(obs_module_t *module).
+func (t Type) Name() (string, error) {
+	r, _, err := dll.OBS.NewProc("obs_get_module_name").Call(
+		uintptr(unsafe.Pointer(t)),
+	)
+	if err != syscall.Errno(0) {
+		return "", errors.Wrap(err, "obs_get_module_name")
+	}
+	return uptr.String(r), nil
 }

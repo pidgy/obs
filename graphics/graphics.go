@@ -14,16 +14,33 @@ type (
 
 	// Effect wraps gs_effect_t.
 	Effect uintptr
+
+	// Module wraps graphics_module argument for video_info_t.
+	Module string
 )
 
 const (
-	Disable Scale = iota
-	Point
-	Bicubic
-	Bilinear
-	Lanczos
-	Area
+	ScaleDisable Scale = iota
+	ScalePoint
+	ScaleBicubic
+	ScaleBilinear
+	ScaleLanczos
+	ScaleArea
+
+	ModuleOpenGL Module = "libobs-opengl"
+	ModuleD3D11  Module = "libobs-d3d11"
 )
+
+func (m Module) String() string {
+	switch m {
+	case ModuleOpenGL:
+		return "libobs-opengl"
+	case ModuleD3D11:
+		return "libobs-d3d11"
+	default:
+		return "unknown-module"
+	}
+}
 
 // Enter wraps obs_enter_graphics.
 func Enter() error {

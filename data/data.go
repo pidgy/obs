@@ -33,6 +33,27 @@ func (t Type) IsNull() bool {
 	return t == Null
 }
 
+// Release wraps void obs_data_release(obs_data_t *data).
+func (t Type) Release() error {
+	_, _, err := dll.OBS.NewProc("obs_data_release").Call()
+	if err != syscall.Errno(0) {
+		return errors.Wrap(err, "obs_data_release")
+	}
+	return nil
+}
+
+// SaveJSON wraps bool obs_data_save_json(obs_data_t *data, const char *file).
+func (t Type) SaveJSON(file string) error {
+	_, _, err := dll.OBS.NewProc("obs_data_save_json").Call(
+		uintptr(t),
+		uptr.FromString(file),
+	)
+	if err != syscall.Errno(0) {
+		return errors.Wrap(err, "obs_data_save_json")
+	}
+	return nil
+}
+
 // SetString wraps void obs_data_set_string(obs_data_t *data, const char *name,const char *val).
 func (t Type) SetString(name, val string) error {
 	_, _, err := dll.OBS.NewProc("obs_data_set_string").Call(

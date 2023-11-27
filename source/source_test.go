@@ -100,7 +100,7 @@ func TestEnumSources(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ss, err := Enum()
+	ss, err := Sources()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -114,7 +114,7 @@ func TestEnumSources(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ss, err = Enum()
+	ss, err = Sources()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -277,7 +277,7 @@ func TestSourceVolume(t *testing.T) {
 	}
 	defer s.Release()
 
-	ss, err := Enum()
+	ss, err := Sources()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -479,7 +479,7 @@ func TestEnumSourceTypes(t *testing.T) {
 	}
 	defer core.Shutdown()
 
-	ids, err := EnumTypes()
+	ids, err := Types()
 	if err != nil {
 		t.Fatal(err)
 	}

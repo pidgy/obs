@@ -13,35 +13,13 @@ import (
 	"github.com/pidgy/obs/uptr"
 )
 
-// Shutdown wraps obs_shutdown.
-func Shutdown() error {
-	_, _, err := dll.OBS.NewProc("obs_shutdown").Call()
+// Initialized wraps bool obs_initialized(void).
+func Initialized() (bool, error) {
+	r, _, err := dll.OBS.NewProc("obs_initialized").Call()
 	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_shutdown")
+		return false, errors.Wrap(err, "obs_initialized")
 	}
-
-	return dll.Cleanup()
-}
-
-// Startup wraps obs_startup, use profiler.None as NULL value.
-func Startup(locale locale.Type, moduleConfigPath string, ns profiler.NameStore) error {
-	file, _, err := dll.Core("obs.dll")
-	if err != nil {
-		return err
-	}
-
-	println("loaded obs.dll from", file)
-
-	_, _, err = dll.OBS.NewProc("obs_startup").Call(
-		uptr.FromString(locale.String()),
-		uptr.FromString(moduleConfigPath),
-		uintptr(unsafe.Pointer(ns)),
-	)
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_startup")
-	}
-
-	return nil
+	return uptr.Bool(r), nil
 }
 
 // Locale wraps obs_get_locale.
@@ -65,6 +43,35 @@ func SetLocale(l locale.Type) error {
 	if err != syscall.Errno(0) {
 		return errors.Wrap(err, "obs_set_locale")
 	}
+	return nil
+}
+
+// Shutdown wraps obs_shutdown.
+func Shutdown() error {
+	_, _, err := dll.OBS.NewProc("obs_shutdown").Call()
+	if err != syscall.Errno(0) {
+		return errors.Wrap(err, "obs_shutdown")
+	}
+
+	return dll.Cleanup()
+}
+
+// Startup wraps obs_startup, use profiler.None as NULL value.
+func Startup(locale locale.Type, moduleConfigPath string, ns profiler.NameStore) error {
+	_, _, err := dll.Core("obs.dll")
+	if err != nil {
+		return err
+	}
+
+	_, _, err = dll.OBS.NewProc("obs_startup").Call(
+		uptr.FromString(locale.String()),
+		uptr.FromString(moduleConfigPath),
+		uintptr(unsafe.Pointer(ns)),
+	)
+	if err != syscall.Errno(0) {
+		return errors.Wrap(err, "obs_startup")
+	}
+
 	return nil
 }
 

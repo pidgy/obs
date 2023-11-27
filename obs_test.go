@@ -5,76 +5,81 @@ import (
 
 	"github.com/pidgy/obs/core"
 	"github.com/pidgy/obs/data"
-	"github.com/pidgy/obs/graphics"
 	"github.com/pidgy/obs/locale"
+	"github.com/pidgy/obs/module"
+	"github.com/pidgy/obs/module/dshow"
 	"github.com/pidgy/obs/profiler"
 	"github.com/pidgy/obs/source"
 )
 
-func TestCreateSource(t *testing.T) {
+func TestOBS(t *testing.T) {
 	err := core.Startup(locale.EnUS, "", profiler.Null)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer core.Shutdown()
 
-	video, err := data.New()
+	ok, err := core.Initialized()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Fatalf("core is not initialized")
+	}
+
+	mod, err := module.New("win-dshow")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = video.SetString("capture_mode", "window")
+	dsc, err := mod.Description()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = video.SetString("window", "foo:bar:foobar.exe")
+	name, err := mod.Name()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	capture, err := source.Create("game_capture", "gameplay", video, 0)
+	println("loaded module:", name, "-", dsc)
+
+	d, err := data.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer d.Release()
+
+	err = d.SetString(dshow.SettingVideoDeviceID, "AVerMedia HD Capture GC573 1")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = d.SetString(dshow.SettingResolution, "1920x1080")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	capture, err := source.Create("dshow_input", "AVerMedia HD Capture GC573 1", d, data.Null)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer capture.Release()
 
-	src, err := source.NewInfo(
-		"unitehud_capture_source",
-		source.InfoTypeInput,
-		source.InfoOutputAsync|source.InfoOutputCustomDraw,
-	).Create(
-		video,
-		capture,
-	)
+	ok, err = capture.Configurable()
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer src.Free()
-	defer src.Destroy()
+	println("configurable:", ok)
 
-	println("id:", src.ID())
-	println("name:", src.Name())
-	println("width:", src.Width())
-	println("height:", src.Height())
-
-	src.VideoRender(graphics.Effect(0))
-
-	src.VideoTick(5)
-
-	err = src.Register()
+	err = capture.VideoRender()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	ts, err := source.EnumTypes()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	println("sources", len(ts))
-
-	for _, t := range ts {
-		println("type", t)
-	}
+	// p, err := capture.Properties()
+	// if err != nil {
+	// 	t.Fatal(err)
+	// }
+	// println(p.IsNull())
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/pidgy/obs/data"
 	"github.com/pidgy/obs/dll"
 	"github.com/pidgy/obs/frame"
+	"github.com/pidgy/obs/properties"
 	"github.com/pidgy/obs/uptr"
 )
 
@@ -45,8 +46,8 @@ func Create(id, name string, settings, hotkeys data.Type) (Type, error) {
 	return Type(r), nil
 }
 
-// Enum wraps void obs_enum_sources(bool (*enum_proc)(void*, obs_source_t*), void *param).
-func Enum() ([]Type, error) {
+// Sources wraps void obs_enum_sources(bool (*enum_proc)(void*, obs_source_t*), void *param).
+func Sources() ([]Type, error) {
 	var t []Type
 
 	// typedef bool (*obs_enum_audio_device_cb)(void *data, const char *name, const char *id).
@@ -66,25 +67,38 @@ func Enum() ([]Type, error) {
 	return t, nil
 }
 
-// EnumTypes wraps bool obs_enum_source_types(size_t idx, const char **id).
-func EnumTypes() (ids []string, err error) {
-	for idx := uintptr(0); idx < 1024; idx++ {
-		id := uptr.NewBytePtr(4096)
-
-		r, _, err := dll.OBS.NewProc("obs_enum_source_types").Call(
-			idx,
-			uintptr(unsafe.Pointer(&id)),
-		)
-		if err != syscall.Errno(0) {
-			return nil, errors.Wrap(err, "obs_enum_source_types")
-		}
-
-		if !uptr.Bool(r) {
-			break
-		}
-		ids = append(ids, uptr.BytePtrToString(id))
+// Configurable wraps bool obs_source_configurable(const obs_source_t *source).
+func (t Type) Configurable() (bool, error) {
+	r, _, err := dll.OBS.NewProc("obs_source_configurable").Call(
+		uintptr(unsafe.Pointer(t)),
+	)
+	if err != syscall.Errno(0) {
+		return false, errors.Wrap(err, "obs_source_configurable")
 	}
-	return ids, nil
+	return uptr.Bool(r), nil
+}
+
+// OutputVideo wraps void obs_source_output_video(obs_source_t *source, const struct obs_source_frame *frame).
+func (t Type) OutputVideo(v *frame.Video) error {
+	_, _, err := dll.OBS.NewProc("obs_source_output_video").Call(
+		uintptr(unsafe.Pointer(t)),
+		uintptr(unsafe.Pointer(v)),
+	)
+	if err != syscall.Errno(0) {
+		return errors.Wrap(err, "obs_source_output_video")
+	}
+	return nil
+}
+
+// Height wraps uint32_t obs_source_get_height(obs_source_t *source).
+func (t Type) Height() (int32, error) {
+	r, _, err := dll.OBS.NewProc("obs_source_get_height").Call(
+		uintptr(unsafe.Pointer(t)),
+	)
+	if err != syscall.Errno(0) {
+		return 0, errors.Wrap(err, "obs_source_get_height")
+	}
+	return int32(r), nil
 }
 
 // ID wraps const char *obs_source_get_id(const obs_source_t *source).
@@ -153,17 +167,15 @@ func (t Type) OutputAudio(a *frame.Audio) error {
 	return nil
 }
 
-// OutputVideo wraps void obs_source_output_video(obs_source_t *source, const struct obs_source_frame *frame).
-func (t Type) OutputVideo(v *frame.Video) error {
-	_, _, err := dll.OBS.NewProc("obs_source_output_video").Call(
+// Properties wraps obs_properties_t *obs_source_properties(const obs_source_t *source).
+func (t Type) Properties() (properties.Type, error) {
+	r, _, err := dll.OBS.NewProc("obs_source_properties").Call(
 		uintptr(unsafe.Pointer(t)),
-		uintptr(unsafe.Pointer(v)),
 	)
 	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_source_output_video")
+		return properties.Null, errors.Wrap(err, "obs_source_properties")
 	}
-
-	return nil
+	return properties.Type(r), nil
 }
 
 // Release wraps void obs_source_release(obs_source_t *source).
@@ -238,4 +250,47 @@ func (t Type) Volume() (float32, error) {
 	}
 
 	return uptr.Float(r), nil
+}
+
+// Width wraps uint32_t obs_source_get_width(obs_source_t *source).
+func (t Type) Width() (uint32, error) {
+	r, _, err := dll.OBS.NewProc("obs_source_get_width").Call(
+		uintptr(unsafe.Pointer(t)),
+	)
+	if err != syscall.Errno(0) {
+		return 0, errors.Wrap(err, "obs_source_get_width")
+	}
+	return uint32(r), nil
+}
+
+// Types wraps bool obs_enum_source_types(size_t idx, const char **id).
+func Types() (ids []string, err error) {
+	for idx := uintptr(0); idx < 1024; idx++ {
+		id := uptr.NewBytePtr(4096)
+
+		r, _, err := dll.OBS.NewProc("obs_enum_source_types").Call(
+			idx,
+			uintptr(unsafe.Pointer(&id)),
+		)
+		if err != syscall.Errno(0) {
+			return nil, errors.Wrap(err, "obs_enum_source_types")
+		}
+
+		if !uptr.Bool(r) {
+			break
+		}
+		ids = append(ids, uptr.BytePtrToString(id))
+	}
+	return ids, nil
+}
+
+// VideoRender wraps void obs_source_video_render(obs_source_t *source).
+func (t Type) VideoRender() error {
+	_, _, err := dll.OBS.NewProc("obs_source_video_render").Call(
+		uintptr(unsafe.Pointer(t)),
+	)
+	if err != syscall.Errno(0) {
+		return errors.Wrap(err, "obs_source_video_render")
+	}
+	return nil
 }
