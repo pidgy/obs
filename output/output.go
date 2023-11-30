@@ -16,7 +16,7 @@ type (
 )
 
 const (
-	// Null represents a Null obs_output_info.
+	// Null represents a nil obs_output_info.
 	Null = Type(0)
 )
 

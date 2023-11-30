@@ -77,71 +77,58 @@ if err != nil {
 }
 ```
 
-##### Creating sources
+##### Creating a DirectShow source
 ```go
-	err := core.Startup(locale.EnUS, "", profiler.Null)
-	if err != nil {
-		panic(err)
-	}
-	defer core.Shutdown()
+v, err := dshow.NewDevice(deviceIndex)
+if err != nil {
+	panic(err)
+}
 
-	video, err := data.New()
-	if err != nil {
-		panic(err)
-	}
+err = core.Startup(locale.EnUS, "", profiler.Null)
+if err != nil {
+	panic(err)
+}
+defer can.Panic(core.Shutdown)
 
-	err = video.SetString("capture_mode", "window")
-	if err != nil {
-		panic(err)
-	}
+mod, err := module.New("win-dshow")
+if err != nil {
+	panic(err)
+}
 
-	err = video.SetString("window", "foo:bar:foobar.exe")
-	if err != nil {
-		panic(err)
-	}
+dsc, err := mod.Description()
+if err != nil {
+	panic(err)
+}
+println("description:", dsc) // Prints "description: Windows DirectShow source/encoder".
 
-	capture, err := source.Create("game_capture", "gameplay", video, 0)
-	if err != nil {
-		panic(err)
-	}
-	defer capture.Release()
+settings, err := data.New()
+if err != nil {
+	panic(err)
+}
+defer can.Release(settings)
 
-	src, err := source.NewInfo(
-		"unitehud_capture_source",
-		source.InfoTypeInput,
-		source.InfoOutputAsync|source.InfoOutputCustomDraw,
-	).Create(
-		video,
-		capture,
-	)
-	if err != nil {
-		panic(err)
-	}
-	defer src.Free()
-	defer src.Destroy()
+config := &dshow.Settings{
+	Active:          true,
+	Name:            v.Name,
+	VideoDeviceID:   v.ID,
+	AudioOutputMode: dshow.DirectSound,
 
-	println("id:", src.ID())
-	println("name:", src.Name())
-	println("width:", src.Width())
-	println("height:", src.Height())
+	HWDecode:  true,
+	Buffering: dshow.BufferingOn,
 
-	src.VideoRender(graphics.Effect(0))
+	DeactivateWhenNotShowing: false,
+}
+err = settings.Set(config)
+if err != nil {
+	panic(err)
+}
 
-	src.VideoTick(5)
+src, err := source.New("dshow_input", "UniteHUD Capture", settings)
+if err != nil {
+	panic(err)
+}
+defer can.Release(src)
 
-	err = src.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	ts, err := source.EnumTypes()
-	if err != nil {
-		panic(err)
-	}
-
-	println("sources", len(ts))
-
-	for _, t := range ts {
-		println("type", t)
-	}
+println("blocking... (Ctrl+C to exit)")
+block.For(time.Minute)
 ```

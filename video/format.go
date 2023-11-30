@@ -1,52 +1,84 @@
 package video
 
-// Format wraps video_format.
-type Format uint32
+type (
+	// ColorSpace wraps video_colorspace.
+	ColorSpace int
+
+	// Format wraps video_format.
+	Format int
+
+	// Range wraps video_range_type.
+	Range int
+)
 
 const (
 	FormatNone Format = iota
-	/* planar 420 format */
-	FormatI420 /* three-plane */
-	FormatNV12 /* two-plane luma and packed chroma */
-
-	/* packed 422 formats */
+	FormatI420
+	FormatNV12
 	FormatYVYU
-	FormatYUY2 /* YUYV */
+	FormatYUY2
 	FormatUYVY
-
-	/* packed uncompressed formats */
 	FormatRGBA
 	FormatBGRA
 	FormatBGRX
-	FormatY800 /* grayscale */
-
-	/* planar 4:4:4 */
+	FormatY800
 	FormatI444
-
-	/* more packed uncompressed formats */
 	FormatBGR3
-
-	/* planar 4:2:2 */
 	FormatI422
-
-	/* planar 4:2:0 with alpha */
 	FormatI40A
-
-	/* planar 4:2:2 with alpha */
 	FormatI42A
-
-	/* planar 4:4:4 with alpha */
 	FormatYUVA
-
-	/* packed 4:4:4 with alpha */
 	FormatAYUV
-
-	ColorspaceDefault Colorspace = iota
+)
+const (
+	ColorspaceDefault ColorSpace = iota
 	Colorspace601
 	Colorspace709
 	ColorspaceSRGB
-
+)
+const (
 	RangeDefault Range = iota
 	RangePartial
 	RangeFull
 )
+
+// Int returns the integer representation of a Colorspace.
+func (c ColorSpace) Int() int {
+	return int(c)
+}
+
+// String returns the string representation of a Colorspace.
+func (c ColorSpace) String() string {
+	switch c {
+	case Colorspace601:
+		return "601"
+	case Colorspace709:
+		return "709"
+	case ColorspaceSRGB:
+		return "SRGB"
+	default:
+		return ""
+	}
+}
+
+// Int returns the integer representation of a Format.
+func (f Format) Int() int {
+	return int(f)
+}
+
+// Int returns the integer representation of a Range.
+func (r Range) Int() int {
+	return int(r)
+}
+
+// String returns the string representation of a Range.
+func (r Range) String() string {
+	switch r {
+	case RangeFull:
+		return "full"
+	case RangePartial:
+		return "partial"
+	default:
+		return ""
+	}
+}

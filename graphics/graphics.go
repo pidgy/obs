@@ -59,3 +59,11 @@ func Leave() error {
 	}
 	return nil
 }
+
+// MustLeave wraps obs_leave_graphics.
+func MustLeave() {
+	_, _, err := dll.OBS.NewProc("obs_leave_graphics").Call()
+	if err != syscall.Errno(0) {
+		panic(errors.Wrap(err, "obs_leave_graphics"))
+	}
+}

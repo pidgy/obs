@@ -25,7 +25,7 @@ type (
 		FPS
 
 		Format
-		Colorspace
+		ColorSpace
 		Range
 
 		graphics.Module
@@ -68,7 +68,7 @@ func NewInfo(o InfoOptions) *Info {
 
 		gpu_conversion: boolean(o.GPUConversion),
 
-		colorspace: uint32(o.Colorspace),
+		colorspace: uint32(o.ColorSpace),
 		_range:     uint32(o.Range),
 
 		scale_type: uint32(o.Scale),

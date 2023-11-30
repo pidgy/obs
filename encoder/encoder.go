@@ -66,7 +66,7 @@ func (t Type) IsNull() bool {
 // Ref wraps obs_encoder_t *obs_encoder_get_ref(obs_encoder_t *encoder).
 func (t Type) Ref() (Type, error) {
 	r, _, err := dll.OBS.NewProc("obs_encoder_get_ref").Call(
-		uintptr(unsafe.Pointer(t)),
+		uintptr(t),
 	)
 	if err != syscall.Errno(0) {
 		return Null, errors.Wrap(err, "obs_encoder_get_ref")
@@ -78,7 +78,7 @@ func (t Type) Ref() (Type, error) {
 // Release wraps void obs_encoder_release(obs_encoder_t *encoder).
 func (t Type) Release() error {
 	_, _, err := dll.OBS.NewProc("obs_encoder_release").Call(
-		uintptr(unsafe.Pointer(t)),
+		uintptr(t),
 	)
 	if err != syscall.Errno(0) {
 		return errors.Wrap(err, "obs_encoder_release")

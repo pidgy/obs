@@ -2,6 +2,7 @@ package obs
 
 import (
 	"testing"
+	"time"
 
 	"github.com/pidgy/obs/core"
 	"github.com/pidgy/obs/data"
@@ -10,76 +11,71 @@ import (
 	"github.com/pidgy/obs/module/dshow"
 	"github.com/pidgy/obs/profiler"
 	"github.com/pidgy/obs/source"
+	"github.com/pidgy/obs/util/block"
+	"github.com/pidgy/obs/util/can"
+	"github.com/pidgy/obs/video"
 )
 
-func TestOBS(t *testing.T) {
-	err := core.Startup(locale.EnUS, "", profiler.Null)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer core.Shutdown()
+func TestOBSCaptureSource(t *testing.T) {
+	device := 0
 
-	ok, err := core.Initialized()
+	v, err := dshow.NewDevice(device)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !ok {
-		t.Fatalf("core is not initialized")
+
+	err = core.Startup(locale.EnUS, "", profiler.Null)
+	if err != nil {
+		t.Fatal(err)
 	}
+	defer can.Panic(core.Shutdown)
 
 	mod, err := module.New("win-dshow")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	dsc, err := mod.Description()
+	settings, err := data.New()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer can.Release(settings)
+
+	s := &dshow.Settings{
+		Active:          true,
+		Name:            v.Name,
+		VideoDeviceID:   v.ID,
+		AudioOutputMode: dshow.DirectSound,
+
+		Resolution: "1920x1080",
+		Res:        dshow.Preferred,
+
+		DeactivateWhenNotShowing: false,
+
+		Buffering:  dshow.BufferingOn,
+		Format:     video.FormatNone,
+		Range:      video.RangeDefault,
+		ColorSpace: video.ColorspaceDefault,
+
+		HWDecode:             true,
+		UseCustomAudioDevice: false,
+		AutoRotation:         false,
+		FlipImage:            false,
+	}
+
+	err = settings.Set(s)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	name, err := mod.Name()
+	src, err := source.New("dshow_input", s.VideoDeviceID, settings)
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer can.Release(src)
 
-	println("loaded module:", name, "-", dsc)
+	println("module:", can.S(mod.Name))
+	println("source:", can.S(src.Name))
 
-	d, err := data.New()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer d.Release()
-
-	err = d.SetString(dshow.SettingVideoDeviceID, "AVerMedia HD Capture GC573 1")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = d.SetString(dshow.SettingResolution, "1920x1080")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	capture, err := source.Create("dshow_input", "AVerMedia HD Capture GC573 1", d, data.Null)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer capture.Release()
-
-	ok, err = capture.Configurable()
-	if err != nil {
-		t.Fatal(err)
-	}
-	println("configurable:", ok)
-
-	err = capture.VideoRender()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// p, err := capture.Properties()
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-	// println(p.IsNull())
+	block.For(time.Second * 10)
 }

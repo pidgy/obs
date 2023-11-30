@@ -13,12 +13,6 @@ import (
 const Null = Type(0)
 
 type (
-	// Colorspace wraps video_colorspace.
-	Colorspace uint32
-
-	// Range wraps video_range_type.
-	Range uint32
-
 	// Data wraps video_data.
 	Data uintptr
 
@@ -34,7 +28,7 @@ type (
 		Height uint32
 
 		Range      Range
-		Colorspace Colorspace
+		Colorspace ColorSpace
 	}
 
 	// Type wraps obs_video_info.

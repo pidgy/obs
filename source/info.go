@@ -8,6 +8,7 @@ package source
 import "C"
 
 import (
+	"fmt"
 	"syscall"
 	"unsafe"
 
@@ -39,6 +40,7 @@ const (
 	InfoTypeInput           InfoType = C.OBS_SOURCE_TYPE_INPUT
 	InfoTypeFilter          InfoType = C.OBS_SOURCE_TYPE_FILTER
 	InfoTypeInputTransition InfoType = C.OBS_SOURCE_TYPE_TRANSITION
+	InfoTypeScene           InfoType = C.OBS_SOURCE_TYPE_SCENE
 
 	InfoOutputFlagVideo          InfoOutputFlag = C.OBS_SOURCE_VIDEO
 	InfoOutputFlagAudio          InfoOutputFlag = C.OBS_SOURCE_AUDIO
@@ -87,6 +89,22 @@ func (i *Info) OutputVideo(v *frame.Video) error {
 	}
 
 	return nil
+}
+
+// String returns the string representation of an InfoType.
+func (i InfoType) String() string {
+	switch i {
+	case InfoTypeInput:
+		return "input"
+	case InfoTypeFilter:
+		return "filter"
+	case InfoTypeInputTransition:
+		return "input transition"
+	case InfoTypeScene:
+		return "scene"
+	default:
+		return fmt.Sprintf("unknown: %d", i)
+	}
 }
 
 // update implements void (*obs_source_info.update)(void *data, obs_data_t *settings).

@@ -6,7 +6,7 @@ type (
 )
 
 const (
-	// Null represents a Null obs_data_t.
+	// Null represents a nil obs_data_t.
 	Null = Type(0)
 )
 

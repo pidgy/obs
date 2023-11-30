@@ -1,8 +1,7 @@
 package frame
 
-/*
-#include "../libobs/include/obs.h"
-*/
+// #cgo windows CFLAGS: -I ../libobs/include -I libobs/include -I libobs
+// #include "obs.h"
 import "C"
 
 // MaxAVPlanes wraps MAX_AV_PLANES.
@@ -76,4 +75,14 @@ func (a Audio) Format() uint32 {
 // Format wraps access to obs_source_frame's format field.
 func (v Video) Format() uint32 {
 	return v.format
+}
+
+// Height wraps access to obs_source_frame's height field.
+func (v Video) Height() uint32 {
+	return uint32(v.height)
+}
+
+// Width wraps access to obs_source_frame's width field.
+func (v Video) Width() uint32 {
+	return uint32(v.width)
 }

@@ -3,7 +3,6 @@ package core
 import (
 	"fmt"
 	"syscall"
-	"unsafe"
 
 	"github.com/pkg/errors"
 
@@ -35,6 +34,14 @@ func Locale() (locale.Type, error) {
 	return locale.Type(uptr.String(l)), nil
 }
 
+// MustShutdown wraps obs_shutdown.
+func MustShutdown() {
+	_, _, err := dll.OBS.NewProc("obs_shutdown").Call()
+	if err != syscall.Errno(0) {
+		panic(errors.Wrap(err, "obs_shutdown"))
+	}
+}
+
 // SetLocale wraps void obs_set_locale(const char *locale).
 func SetLocale(l locale.Type) error {
 	_, _, err := dll.OBS.NewProc("obs_set_locale").Call(
@@ -63,10 +70,15 @@ func Startup(locale locale.Type, moduleConfigPath string, ns profiler.NameStore)
 		return err
 	}
 
+	_, _, err = dll.Core("obs-frontend-api.dll")
+	if err != nil {
+		return err
+	}
+
 	_, _, err = dll.OBS.NewProc("obs_startup").Call(
 		uptr.FromString(locale.String()),
 		uptr.FromString(moduleConfigPath),
-		uintptr(unsafe.Pointer(ns)),
+		uintptr(ns),
 	)
 	if err != syscall.Errno(0) {
 		return errors.Wrap(err, "obs_startup")

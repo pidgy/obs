@@ -13,11 +13,13 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/pidgy/obs/kernel32"
+	"github.com/pidgy/obs/uptr"
 )
 
 // OBS errorss obs.dll access in a single package.
 var (
-	OBS = syscall.NewLazyDLL(`obs.dll`)
+	OBS      = syscall.NewLazyDLL(`obs.dll`)
+	Frontend = syscall.NewLazyDLL(`obs-frontend-api.dll`)
 )
 
 const (
@@ -40,6 +42,24 @@ var (
 
 	cookies []kernel32.Cookie
 )
+
+func OBSCallBool(name string, args ...uintptr) (bool, error) {
+	r, err := OBSCall(name, args...)
+	return uptr.Bool(r), err
+}
+
+func OBSCallString(name string, args ...uintptr) (string, error) {
+	r, err := OBSCall(name, args...)
+	return uptr.String(r), err
+}
+
+func OBSCall(name string, args ...uintptr) (uintptr, error) {
+	r, _, err := OBS.NewProc(name).Call(args...)
+	if err != syscall.Errno(0) {
+		return r, errors.Wrap(err, name)
+	}
+	return r, nil
+}
 
 // Cleanup removes dll directory cookies and returns accumulated errors.
 func Cleanup() error {

@@ -33,7 +33,7 @@ func TestSourceCreateRelease(t *testing.T) {
 	}
 
 	// obs_source_create("game_capture", "gameplay", videoSourceSettings, IntPtr.Zero)
-	s, err := Create("game_capture", "gameplay", video, 0)
+	s, err := New("game_capture", "gameplay", video)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func TestEnumSources(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := Create("game_capture", "gameplay", video, 0)
+	s, err := New("game_capture", "gameplay", video)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func TestSourceSetGetName(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := Create("game_capture", "gameplay", video, 0)
+	s, err := New("game_capture", "gameplay", video)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -197,7 +197,7 @@ func TestSourceIsScene(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := Create("game_capture", "gameplay", video, 0)
+	s, err := New("game_capture", "gameplay", video)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -233,7 +233,7 @@ func TestSourceID(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := Create("game_capture", "gameplay", video, 0)
+	s, err := New("game_capture", "gameplay", video)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -271,7 +271,7 @@ func TestSourceVolume(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := Create("video", "wtf", video, 0)
+	s, err := New("video", "wtf", video)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -361,7 +361,7 @@ func TestSourceMuted(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := Create("game_capture", "gameplay", video, 0)
+	s, err := New("game_capture", "gameplay", video)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -418,7 +418,7 @@ func TestSourceOutputVideo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := Create("1", "gameplay", 0, 0)
+	s, err := New("1", "gameplay", data.Null)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -456,7 +456,7 @@ func TestSourceOutputAudio(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s, err := Create("1", "gameplay", 0, 0)
+	s, err := New("1", "gameplay", data.Null)
 	if err != nil {
 		t.Fatal(err)
 	}
