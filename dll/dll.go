@@ -4,10 +4,10 @@
 package dll
 
 import (
-	join "errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"syscall"
 
 	"github.com/pkg/errors"
@@ -16,15 +16,16 @@ import (
 	"github.com/pidgy/obs/uptr"
 )
 
-// OBS errorss obs.dll access in a single package.
+// obs errorss obs.dll access in a single package.
 var (
-	OBS      = syscall.NewLazyDLL(`obs.dll`)
-	Frontend = syscall.NewLazyDLL(`obs-frontend-api.dll`)
+	obs = syscall.NewLazyDLL(`obs.dll`)
+	// frontend = syscall.NewLazyDLL(`obs-frontend-api.dll`)
 )
 
 const (
-	pwd = "./libobs" // "./libobs-30.0.0/"
-	sys = ""         // Don't use "C:/Program Files/obs-studio/"
+	pwd = "./libobs"
+	sys = ""
+	// sys = "C:/Program Files/obs-studio/"
 )
 
 var (
@@ -43,40 +44,19 @@ var (
 	cookies []kernel32.Cookie
 )
 
-func OBSCallBool(name string, args ...uintptr) (bool, error) {
-	r, err := OBSCall(name, args...)
-	return uptr.Bool(r), err
-}
-
-func OBSCallString(name string, args ...uintptr) (string, error) {
-	r, err := OBSCall(name, args...)
-	return uptr.String(r), err
-}
-
-func OBSCall(name string, args ...uintptr) (uintptr, error) {
-	r, _, err := OBS.NewProc(name).Call(args...)
-	if err != syscall.Errno(0) {
-		return r, errors.Wrap(err, name)
-	}
-	return r, nil
-}
-
 // Cleanup removes dll directory cookies and returns accumulated errors.
-func Cleanup() error {
-	var errs []error
-
+func Cleanup() {
 	for _, c := range cookies {
-		err := c.RemoveDllDirectory()
-		if err != nil {
-			errs = append(errs, err)
-		}
+		_ = c.RemoveDllDirectory()
 	}
-
-	return join.Join(errs...)
 }
 
 // Core loads 64bit bin .dlls from "${bin}\libobs\bin...}".
 func Core(dll string) (file, dir string, err error) {
+	if !strings.HasSuffix(dll, ".dll") {
+		dll = fmt.Sprintf("%s.dll", dll)
+	}
+
 	dir = filepath.Join(sys, "/bin/64bit")
 	file, err = load(dir, dll)
 	if err == nil {
@@ -127,6 +107,60 @@ func Module(dll string) (file, dir string, err error) {
 	}
 
 	return "", "", fmt.Errorf("failed to load %s", dll)
+}
+
+// OBS is a convenience function for executing procedure calls to obs.dll.
+func OBS(name string, args ...uintptr) error {
+	_, err := OBSuintptr(name, args...)
+	return err
+}
+
+// OBSbool is a convenience function for executing procedure calls to obs.dll.
+func OBSbool(name string, args ...uintptr) (bool, error) {
+	r, err := OBSuintptr(name, args...)
+	return uptr.Bool(r), err
+}
+
+// OBSfloat32 is a convenience function for executing procedure calls to obs.dll.
+func OBSfloat32(name string, args ...uintptr) (float32, error) {
+	r, err := OBSuintptr2(name, args...)
+	return uptr.Float(r), err
+}
+
+// OBSint32 is a convenience function for executing procedure calls to obs.dll.
+func OBSint32(name string, args ...uintptr) (int32, error) {
+	r, err := OBSuintptr(name, args...)
+	return int32(r), err
+}
+
+// OBSstring is a convenience function for executing procedure calls to obs.dll.
+func OBSstring(name string, args ...uintptr) (string, error) {
+	r, err := OBSuintptr(name, args...)
+	return uptr.String(r), err
+}
+
+// OBSuint32 is a convenience function for executing procedure calls to obs.dll.
+func OBSuint32(name string, args ...uintptr) (uint32, error) {
+	r, err := OBSuintptr(name, args...)
+	return uint32(r), err
+}
+
+// OBSuintptr is a convenience function for executing procedure calls to obs.dll.
+func OBSuintptr(name string, args ...uintptr) (uintptr, error) {
+	r, _, err := obs.NewProc(name).Call(args...)
+	if err != syscall.Errno(0) {
+		return 0, errors.Wrap(err, name)
+	}
+	return r, nil
+}
+
+// OBSuintptr2 is a convenience function for executing procedure calls to obs.dll.
+func OBSuintptr2(name string, args ...uintptr) (uintptr, error) {
+	_, r, err := obs.NewProc(name).Call(args...)
+	if err != syscall.Errno(0) {
+		return 0, errors.Wrap(err, name)
+	}
+	return r, nil
 }
 
 // load will add dir to the windows search path and return the absolute path of dll.

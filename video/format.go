@@ -2,13 +2,13 @@ package video
 
 type (
 	// ColorSpace wraps video_colorspace.
-	ColorSpace int
+	ColorSpace uint32
 
 	// Format wraps video_format.
-	Format int
+	Format uint32
 
 	// Range wraps video_range_type.
-	Range int
+	Range uint32
 )
 
 const (
@@ -43,8 +43,8 @@ const (
 )
 
 // Int returns the integer representation of a Colorspace.
-func (c ColorSpace) Int() int {
-	return int(c)
+func (c ColorSpace) Uint32() uint32 {
+	return uint32(c)
 }
 
 // String returns the string representation of a Colorspace.
@@ -62,13 +62,13 @@ func (c ColorSpace) String() string {
 }
 
 // Int returns the integer representation of a Format.
-func (f Format) Int() int {
-	return int(f)
+func (f Format) Uint32() uint32 {
+	return uint32(f)
 }
 
 // Int returns the integer representation of a Range.
-func (r Range) Int() int {
-	return int(r)
+func (r Range) Uint32() uint32 {
+	return uint32(r)
 }
 
 // String returns the string representation of a Range.

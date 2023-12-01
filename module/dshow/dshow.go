@@ -126,7 +126,7 @@ func (s *Settings) Ints() map[string]int {
 		"buffering":         s.Buffering.Int(),
 		"frame_interval":    s.FrameInterval,
 		"res_type":          s.Res.Int(),
-		"video_format":      s.Format.Int(),
+		"video_format":      int(s.Format.Uint32()),
 	}
 }
 

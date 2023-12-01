@@ -45,11 +45,8 @@ const (
 
 // Current wraps obs_module_t *obs_current_module(void).
 func Current() (Type, error) {
-	r, _, err := dll.OBS.NewProc("obs_current_module").Call()
-	if err != syscall.Errno(0) {
-		return Null, errors.Wrap(err, "obs_current_module")
-	}
-	return Type(r), nil
+	r, err := dll.OBSuintptr("obs_current_module")
+	return Type(r), err
 }
 
 // New wraps
@@ -64,22 +61,16 @@ func New(name string) (Type, error) {
 	}
 	dir = filepath.Join(dir, "../", "../", "data", "obs-plugins", name)
 
-	_, _, err = dll.OBS.NewProc("obs_open_module").Call(
-		uintptr(unsafe.Pointer(&m)),
-		uptr.FromString(file),
-		uptr.FromString(dir),
-	)
-	if err != syscall.Errno(0) {
-		return Null, errors.Wrapf(err, "obs_open_module: %s", Return(err.(syscall.Errno)))
+	err = dll.OBS("obs_open_module", uintptr(unsafe.Pointer(&m)), uptr.FromString(file), uptr.FromString(dir))
+	if err != nil {
+		return Null, errors.Wrap(err, Return(err.(syscall.Errno)).String())
 	}
 
-	r, _, err := dll.OBS.NewProc("obs_init_module").Call(
-		uintptr(m),
-	)
-	if err != syscall.Errno(0) {
-		return Null, errors.Wrap(err, "obs_init_module")
+	ok, err := dll.OBSbool("obs_init_module", uintptr(m))
+	if err != nil {
+		return Null, err
 	}
-	if !uptr.Bool(r) {
+	if !ok {
 		return Null, errors.Wrap(errors.Errorf("module was not loaded successfully"), "obs_init_module")
 	}
 
@@ -93,34 +84,18 @@ func (f FailureInfo) IsNull() bool {
 
 // LoadAll wraps void obs_load_all_modules(void).
 func LoadAll() error {
-	_, _, err := dll.OBS.NewProc("obs_load_all_modules").Call()
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_load_all_modules")
-	}
-	return nil
+	return dll.OBS("obs_load_all_modules")
 }
 
 // LoadAll2 wraps void obs_load_all_modules2(struct obs_module_failure_info *mfi).
 func LoadAll2() (FailureInfo, error) {
 	f := FailureInfo(Null)
-
-	_, _, err := dll.OBS.NewProc("obs_load_all_modules2").Call(
-		uintptr(f),
-	)
-	if err != syscall.Errno(0) {
-		return FailureInfo(Null), errors.Wrap(err, "obs_load_all_modules2")
-	}
-
-	return f, nil
+	return f, dll.OBS("obs_load_all_modules2", uintptr(f))
 }
 
 // Log wraps obs_log_loaded_modules.
 func Log() error {
-	_, _, err := dll.OBS.NewProc("obs_log_loaded_modules").Call()
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_log_loaded_modules")
-	}
-	return nil
+	return dll.OBS("obs_log_loaded_modules")
 }
 
 // String returns the human-readable representation of the return value obs_open_module.
@@ -145,7 +120,7 @@ func (r Return) String() string {
 
 // Description wraps const char *obs_get_module_description(obs_module_t *module).
 func (t Type) Description() (string, error) {
-	return dll.OBSCallString("obs_get_module_description", uintptr(t))
+	return dll.OBSstring("obs_get_module_description", uintptr(t))
 }
 
 // IsNull returns true or false as to whether or not Type has been initialized.
@@ -155,11 +130,5 @@ func (t Type) IsNull() bool {
 
 // Name wraps const char *obs_get_module_name(obs_module_t *module).
 func (t Type) Name() (string, error) {
-	r, _, err := dll.OBS.NewProc("obs_get_module_name").Call(
-		uintptr(t),
-	)
-	if err != syscall.Errno(0) {
-		return "", errors.Wrap(err, "obs_get_module_name")
-	}
-	return uptr.String(r), nil
+	return dll.OBSstring("obs_get_module_name", uintptr(t))
 }

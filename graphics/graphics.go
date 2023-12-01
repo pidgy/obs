@@ -1,16 +1,12 @@
 package graphics
 
 import (
-	"syscall"
-
-	"github.com/pkg/errors"
-
 	"github.com/pidgy/obs/dll"
 )
 
 type (
 	// Scale wraps obs_scale_type.
-	Scale int
+	Scale uint32
 
 	// Effect wraps gs_effect_t.
 	Effect uintptr
@@ -44,26 +40,15 @@ func (m Module) String() string {
 
 // Enter wraps obs_enter_graphics.
 func Enter() error {
-	_, _, err := dll.OBS.NewProc("obs_enter_graphics").Call()
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_enter_graphics")
-	}
-	return nil
+	return dll.OBS("obs_enter_graphics")
 }
 
 // Leave wraps obs_leave_graphics.
 func Leave() error {
-	_, _, err := dll.OBS.NewProc("obs_leave_graphics").Call()
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_leave_graphics")
-	}
-	return nil
+	return dll.OBS("obs_leave_graphics")
 }
 
-// MustLeave wraps obs_leave_graphics.
-func MustLeave() {
-	_, _, err := dll.OBS.NewProc("obs_leave_graphics").Call()
-	if err != syscall.Errno(0) {
-		panic(errors.Wrap(err, "obs_leave_graphics"))
-	}
+// Uint32 returns Scale as a uint32 type.
+func (s Scale) Uint32() uint32 {
+	return uint32(s)
 }

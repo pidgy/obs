@@ -3,9 +3,10 @@ package main
 import (
 	"time"
 
-	"github.com/pidgy/obs/call"
+	"github.com/pidgy/obs/audio"
 	"github.com/pidgy/obs/core"
 	"github.com/pidgy/obs/data"
+	"github.com/pidgy/obs/graphics"
 	"github.com/pidgy/obs/locale"
 	"github.com/pidgy/obs/module"
 	"github.com/pidgy/obs/module/dshow"
@@ -13,6 +14,7 @@ import (
 	"github.com/pidgy/obs/source"
 	"github.com/pidgy/obs/util/block"
 	"github.com/pidgy/obs/util/can"
+	"github.com/pidgy/obs/video"
 )
 
 /*
@@ -31,31 +33,74 @@ func main() {
 		return
 	}
 
+	println("--------------------------------")
+	println("device_name:", v.Name)
+	println("device_id:", v.Path)
+	println("--------------------------------")
+
 	err = core.Startup(locale.EnUS, "", profiler.Null)
 	if err != nil {
-		println(err.Error())
-		return
+		panic(err)
 	}
 	defer can.Panic(core.Shutdown)
 
-	mod, err := module.New("win-dshow")
+	result, err := video.Info{
+		Module:        graphics.ModuleD3D11,
+		FPS:           video.FPS60,
+		Base:          video.Resolution1920x1080,
+		Output:        video.Resolution1920x1080,
+		Format:        video.FormatYUY2,
+		Adapter:       0,
+		GPUConversion: true,
+		ColorSpace:    video.ColorspaceDefault,
+		Range:         video.RangeDefault,
+		Scale:         graphics.ScaleBicubic,
+	}.Reset()
 	if err != nil {
-		println(err.Error())
-		return
+		panic(err)
+	}
+	if result != video.ResetResultSuccess {
+		panic(result.String())
 	}
 
-	dsc, err := mod.Description()
+	ok, err := audio.Info{
+		SamplesPerSecond: audio.SamplesPerSecond44p1kHz,
+		SpeakerLayout:    audio.SpeakerLayoutStereo,
+	}.Reset()
 	if err != nil {
-		println(err.Error())
-		return
+		panic(err)
+	}
+	if !ok {
+		println("failed to reset audio")
 	}
 
-	println("description:", dsc)
+	version, _, err := core.Version()
+	if err != nil {
+		panic(err)
+	}
+
+	println("--------------------------------")
+	println("obs_version:", version)
+	println("--------------------------------")
+
+	err = graphics.Enter()
+	if err != nil {
+		panic(err)
+	}
+	defer can.Panic(graphics.Leave)
+
+	println("--------------------------------")
+	println("graphics_enter")
+	println("--------------------------------")
+
+	_, err = module.New("win-dshow")
+	if err != nil {
+		panic(err)
+	}
 
 	settings, err := data.New()
 	if err != nil {
-		println(err.Error())
-		return
+		panic(err)
 	}
 	defer can.Release(settings)
 
@@ -72,48 +117,24 @@ func main() {
 	}
 	err = settings.Set(config)
 	if err != nil {
-		println(err.Error())
-		return
+		panic(err)
 	}
 
-	src, err := source.New("dshow_input", "UniteHUD Capture", settings)
+	src, err := source.New("dshow_input", v.ID, settings)
 	if err != nil {
-		println(err.Error())
-		return
+		panic(err)
 	}
 	defer can.Release(src)
 
-	block.For(time.Millisecond * 100)
+	block.For(time.Second * 5)
 
-	h, err := src.ProcHandler()
+	err = src.VideoRender()
 	if err != nil {
-		println(err.Error())
-		return
-	}
-	println("proc:", h.IsNull())
-
-	c, err := call.New()
-	if err != nil {
-		println(err.Error())
-		return
+		panic(err)
 	}
 
-	err = c.Bool("activate", true)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-	defer can.Panic(c.Free)
+	// println(p.IsNull())
 
-	ok, err := h.Call("void activate(bool active)", c)
-	if err != nil {
-		println(err.Error())
-		return
-	}
-
-	println("callback:", ok)
-
-	println("blocking... (Ctrl+C to exit)")
 	block.For(time.Minute)
 }
 

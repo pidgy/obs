@@ -1,66 +1,39 @@
 package core
 
 import (
-	"fmt"
-	"syscall"
-
-	"github.com/pkg/errors"
-
 	"github.com/pidgy/obs/dll"
 	"github.com/pidgy/obs/locale"
 	"github.com/pidgy/obs/profiler"
 	"github.com/pidgy/obs/uptr"
 )
 
+// AddDataPath wraps EXPORT char *obs_find_data_file(const char *file).
+// https://github.com/obsproject/obs-studio/blob/master/libobs/obs.h#L324
+func AddDataPath(path string) error {
+	return dll.OBS("obs_add_data_path", uptr.FromString(path))
+
+}
+
 // Initialized wraps bool obs_initialized(void).
 func Initialized() (bool, error) {
-	r, _, err := dll.OBS.NewProc("obs_initialized").Call()
-	if err != syscall.Errno(0) {
-		return false, errors.Wrap(err, "obs_initialized")
-	}
-	return uptr.Bool(r), nil
+	return dll.OBSbool("obs_initialized")
 }
 
 // Locale wraps obs_get_locale.
 func Locale() (locale.Type, error) {
-	l, _, err := dll.OBS.NewProc("obs_get_locale").Call()
-	if err != syscall.Errno(0) {
-		return "", errors.Wrap(err, "obs_get_locale")
-	}
-	if l == 0 {
-		return "", fmt.Errorf("unknown locale")
-	}
-
-	return locale.Type(uptr.String(l)), nil
-}
-
-// MustShutdown wraps obs_shutdown.
-func MustShutdown() {
-	_, _, err := dll.OBS.NewProc("obs_shutdown").Call()
-	if err != syscall.Errno(0) {
-		panic(errors.Wrap(err, "obs_shutdown"))
-	}
+	r, err := dll.OBSuintptr("obs_get_locale")
+	return locale.Type(uptr.String(r)), err
 }
 
 // SetLocale wraps void obs_set_locale(const char *locale).
 func SetLocale(l locale.Type) error {
-	_, _, err := dll.OBS.NewProc("obs_set_locale").Call(
-		uptr.FromString(l.String()),
-	)
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_set_locale")
-	}
-	return nil
+	return dll.OBS("obs_set_locale", uptr.FromString(l.String()))
 }
 
 // Shutdown wraps obs_shutdown.
 func Shutdown() error {
-	_, _, err := dll.OBS.NewProc("obs_shutdown").Call()
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_shutdown")
-	}
-
-	return dll.Cleanup()
+	defer dll.Cleanup()
+	return dll.OBS("obs_shutdown")
 }
 
 // Startup wraps obs_startup, use profiler.None as NULL value.
@@ -75,29 +48,15 @@ func Startup(locale locale.Type, moduleConfigPath string, ns profiler.NameStore)
 		return err
 	}
 
-	_, _, err = dll.OBS.NewProc("obs_startup").Call(
-		uptr.FromString(locale.String()),
-		uptr.FromString(moduleConfigPath),
-		uintptr(ns),
-	)
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_startup")
-	}
-
-	return nil
+	return dll.OBS("obs_startup", uptr.FromString(locale.String()), uptr.FromString(moduleConfigPath), uintptr(ns))
 }
 
 // Version wraps obs_get_version_string and obs_get_version.
-func Version() (string, uint32, error) {
-	v1, _, err := dll.OBS.NewProc("obs_get_version_string").Call()
-	if err != syscall.Errno(0) {
-		return "", 0, errors.Wrap(err, "obs_get_version_string")
+func Version() (s string, u uint32, err error) {
+	s, err = dll.OBSstring("obs_get_version_string")
+	if err != nil {
+		return
 	}
-
-	v2, _, err := dll.OBS.NewProc("obs_get_version").Call()
-	if err != syscall.Errno(0) {
-		return "", 0, errors.Wrap(err, "obs_get_version")
-	}
-
-	return uptr.String(v1), uint32(v2), nil
+	u, err = dll.OBSuint32("obs_get_version")
+	return
 }

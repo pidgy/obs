@@ -1,7 +1,6 @@
 package input
 
 import (
-	"syscall"
 	"unsafe"
 
 	"github.com/pkg/errors"
@@ -15,17 +14,14 @@ func EnumTypes() (ids []string, err error) {
 	for idx := uintptr(0); idx < 1024; idx++ {
 		id := uptr.NewBytePtr(4096)
 
-		r, _, err := dll.OBS.NewProc("obs_enum_input_types").Call(
-			idx,
-			uintptr(unsafe.Pointer(&id)),
-		)
-		if err != syscall.Errno(0) {
+		ok, err := dll.OBSbool("obs_enum_input_types", idx, uintptr(unsafe.Pointer(&id)))
+		if err != nil {
 			return nil, errors.Wrap(err, "obs_enum_input_types")
 		}
-
-		if !uptr.Bool(r) {
+		if !ok {
 			break
 		}
+
 		ids = append(ids, uptr.BytePtrToString(id))
 	}
 	return ids, nil

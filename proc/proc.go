@@ -1,6 +1,8 @@
 package proc
 
 import (
+	"unsafe"
+
 	"github.com/pidgy/obs/call"
 	"github.com/pidgy/obs/dll"
 	"github.com/pidgy/obs/uptr"
@@ -17,8 +19,8 @@ const (
 )
 
 // Call wraps bool proc_handler_call(proc_handler_t *handler, const char *name, calldata_t *params).
-func (h Handler) Call(name string, data call.Data) (bool, error) {
-	return dll.OBSCallBool("proc_handler_call", uintptr(h), uptr.FromString(name), uintptr(data))
+func (h Handler) Call(name string, data *call.Data) (bool, error) {
+	return dll.OBSbool("proc_handler_call", uintptr(h), uptr.FromString(name), uintptr(unsafe.Pointer(data)))
 }
 
 // IsNull returns true or false as to whether or not Handler has been initialized.

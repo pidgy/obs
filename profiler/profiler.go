@@ -1,10 +1,7 @@
 package profiler
 
 import (
-	"syscall"
 	"unsafe"
-
-	"github.com/pkg/errors"
 
 	"github.com/pidgy/obs/dll"
 	"github.com/pidgy/obs/uptr"
@@ -20,34 +17,19 @@ const (
 
 // New wraps profiler_name_store_create.
 func New() (NameStore, error) {
-	r, _, err := dll.OBS.NewProc("profiler_name_store_create").Call()
-	if err != syscall.Errno(0) {
-		return 0, errors.Wrap(err, "profiler_name_store_create")
-	}
-
-	return NameStore(r), nil
+	r, err := dll.OBSuintptr("profiler_name_store_create")
+	return NameStore(r), err
 }
 
 // Get wraps obs_get_profiler_name_store.
 func Get() (NameStore, error) {
-	r, _, err := dll.OBS.NewProc("obs_get_profiler_name_store").Call()
-	if err != syscall.Errno(0) {
-		return 0, errors.Wrap(err, "obs_get_profiler_name_store")
-	}
-
-	return NameStore(r), nil
+	r, err := dll.OBSuintptr("obs_get_profiler_name_store")
+	return NameStore(r), err
 }
 
 // Close wraps profiler_name_store_free.
 func (n NameStore) Close() error {
-	_, _, err := dll.OBS.NewProc("profiler_name_store_free").Call(
-		uintptr(unsafe.Pointer(n)),
-	)
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "profiler_name_store_free")
-	}
-
-	return nil
+	return dll.OBS("profiler_name_store_free", uintptr(unsafe.Pointer(n)))
 }
 
 // IsNull returns true or false as to whether or not NameStore has been initialized.
@@ -57,13 +39,5 @@ func (n NameStore) IsNull() bool {
 
 // Store wraps const char *profile_store_name(profiler_name_store_t *store, const char *format, ...).
 func (n NameStore) Store(name string) (string, error) {
-	r, _, err := dll.OBS.NewProc("profile_store_name").Call(
-		uintptr(unsafe.Pointer(n)),
-		uptr.FromString(name),
-	)
-	if err != syscall.Errno(0) {
-		return "", errors.Wrap(err, "profile_store_name")
-	}
-
-	return uptr.String(r), nil
+	return dll.OBSstring("profile_store_name", uintptr(unsafe.Pointer(n)), uptr.FromString(name))
 }

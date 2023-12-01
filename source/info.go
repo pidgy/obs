@@ -9,10 +9,7 @@ import "C"
 
 import (
 	"fmt"
-	"syscall"
 	"unsafe"
-
-	"github.com/pkg/errors"
 
 	"github.com/pidgy/obs/dll"
 	"github.com/pidgy/obs/frame"
@@ -67,28 +64,12 @@ func Register(o *InfoOptions) error {
 		update:       (*[0]byte)(C.info_update),
 	}
 
-	_, _, err := dll.OBS.NewProc("obs_register_source_s").Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr((C.size_t)(unsafe.Sizeof(C.struct_obs_source_info{}))),
-	)
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_register_source_s")
-	}
-
-	return nil
+	return dll.OBS("obs_register_source_s", uintptr(unsafe.Pointer(i)), uintptr((C.size_t)(unsafe.Sizeof(C.struct_obs_source_info{}))))
 }
 
 // OutputVideo wraps void obs_source_output_video(obs_source_t *source, const struct obs_source_frame *frame).
 func (i *Info) OutputVideo(v *frame.Video) error {
-	_, _, err := dll.OBS.NewProc("obs_source_output_video").Call(
-		uintptr(unsafe.Pointer(i)),
-		uintptr(unsafe.Pointer(v)),
-	)
-	if err != syscall.Errno(0) {
-		return errors.Wrap(err, "obs_source_output_video")
-	}
-
-	return nil
+	return dll.OBS("obs_source_output_video", uintptr(unsafe.Pointer(i)), uintptr(unsafe.Pointer(v)))
 }
 
 // String returns the string representation of an InfoType.
@@ -111,26 +92,19 @@ func (i InfoType) String() string {
 //
 //export info_update
 func info_update(data *C.void, settings *C.obs_data_t) {
-	println("-> info_update")
 }
 
 // info_get_name implements const char *(*obs_source_info.info_get_name)(void *type_data).
 //
 //export info_get_name
 func info_get_name(type_data *C.void) *C.const_char_t {
-	i := (*Info)(unsafe.Pointer(type_data))
-
-	println("->", C.GoString(i.id), "info_get_name")
-
-	return i.id
+	return nil
 }
 
 // info_create wraps void *(*obs_source_info.create)(obs_data_t *settings, obs_source_t *source).
 //
 //export info_create
 func info_create(settings *C.obs_data_t, source *C.obs_source_t) *C.void {
-	println("-> info_create")
-
 	b := [0]byte{}
 	return (*C.void)(&b)
 }
@@ -139,39 +113,30 @@ func info_create(settings *C.obs_data_t, source *C.obs_source_t) *C.void {
 //
 //export info_destroy
 func info_destroy(data *C.void) {
-	println("-> info_destroy")
 }
 
 // info_video_render wraps void (*obs_source_info.video_render)(void *data, gs_effect_t *effect).
 //
 //export info_video_render
 func info_video_render(data *C.void, effect *C.gs_effect_t) {
-	println("-> info_video_render")
 }
 
 // info_video_tick wraps void (*obs_source_info.video_tick)(void *data, float seconds).
 //
 //export info_video_tick
 func info_video_tick(data *C.void, seconds C.float) {
-	println("-> info_video_tick", int(seconds))
 }
 
 // info_get_width wraps uint32_t (*obs_source_info.get_width)(void *data).
 //
 //export info_get_width
 func info_get_width(data *C.void) C.uint32_t {
-	println("-> info_get_width")
 	return 0
-
-	// i := (*Info)(unsafe.Pointer(data))
-	// return C.uint32_t(i.opts.Width)
 }
 
 // info_get_height wraps uint32_t (*obs_source_info.get_height)(void *data).
 //
 //export info_get_height
 func info_get_height(data *C.void) C.uint32_t {
-	i := (*Info)(unsafe.Pointer(data))
-	println("->", C.GoString(i.id), "info_get_height")
 	return C.uint32_t(0)
 }
